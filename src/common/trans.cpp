@@ -63,8 +63,11 @@ namespace pvpgn
 			eventlog(eventlog_level_error, __FUNCTION__, "could not open file \"{}\" for reading (std::fopen: {})", filename, std::strerror(errno));
 			return -1;
 		}
+		eventlog(eventlog_level_debug, __FUNCTION__, "input of file \"{}\"", filename);
 		trans_head = list_create();
+		eventlog(eventlog_level_debug, __FUNCTION__, "trans_head create");
 		for (line = 1; (buff = file_get_line(fp)); line++) {
+			eventlog(eventlog_level_debug, __FUNCTION__, "input line {} of file \"{}\"", line, filename);
 			for (pos = 0; buff[pos] == '\t' || buff[pos] == ' '; pos++);
 			if (buff[pos] == '\0' || buff[pos] == '#') {
 				continue;
@@ -78,16 +81,20 @@ namespace pvpgn
 				for (endpos = len - 1; buff[endpos] == '\t' || buff[endpos] == ' '; endpos--);
 				buff[endpos + 1] = '\0';
 			}
+			eventlog(eventlog_level_debug, __FUNCTION__, "input2 line {} of file \"{}\"", line, filename);
 			if (!(input = std::strtok(buff, " \t"))) { /* std::strtok modifies the string it is passed */
 				eventlog(eventlog_level_error, __FUNCTION__, "missing input line {} of file \"{}\"", line, filename);
 				continue;
 			}
+
+			eventlog(eventlog_level_debug, __FUNCTION__, "input3 line {} of file \"{}\"", line, filename);
 			/* check for port number - this tells us what programs will use this entry */
 			if (!(temp = std::strrchr(input, ':'))) {
 				eventlog(eventlog_level_error, __FUNCTION__, "missing port # on input line {} of file \"{}\"", line, filename);
 				continue;
 			}
 			temp++;
+			eventlog(eventlog_level_debug, __FUNCTION__, "input line4 {} of file \"{}\"", line, filename);
 			/* bnetd doesn't want the port 4000 entries */
 			if (program == TRANS_BNETD  && std::strcmp(temp, "4000") == 0) {
 #ifdef DEBUG_TRANS
@@ -95,6 +102,7 @@ namespace pvpgn
 #endif
 				continue;
 			}
+			eventlog(eventlog_level_debug, __FUNCTION__, "input line5 {} of file \"{}\"", line, filename);
 			/* d2cs only wants the port 4000 entries */
 			if (program == TRANS_D2CS && std::strcmp(temp, "4000") != 0) {
 #ifdef DEBUG_TRANS
@@ -102,10 +110,12 @@ namespace pvpgn
 #endif
 				continue;
 			}
+			eventlog(eventlog_level_debug, __FUNCTION__, "input line6 {} of file \"{}\"", line, filename);
 			if (!(output = std::strtok(NULL, " \t"))) {
 				eventlog(eventlog_level_error, __FUNCTION__, "missing output on line {} of file \"{}\"", line, filename);
 				continue;
 			}
+			eventlog(eventlog_level_debug, __FUNCTION__, "input line {} of file \"{}\"", line, filename);
 			if (!(exclude = std::strtok(NULL, " \t"))) {
 				eventlog(eventlog_level_error, __FUNCTION__, "missing exclude on line {} of file \"{}\"", line, filename);
 				continue;
@@ -235,7 +245,7 @@ namespace pvpgn
 		}
 		file_get_line(NULL); // clear file_get_line buffer
 		std::fclose(fp);
-		eventlog(eventlog_level_info, __FUNCTION__, "trans file loaded");
+		
 		return 0;
 	}
 
@@ -259,6 +269,7 @@ namespace pvpgn
 				list_remove_elem(trans_head, &curr);
 			}
 			list_destroy(trans_head);
+			eventlog(eventlog_level_info, __FUNCTION__, "trans_head set to NULL");
 			trans_head = NULL;
 		}
 		return 0;
@@ -287,6 +298,7 @@ namespace pvpgn
 #endif
 
 		if (trans_head) {
+			eventlog(eventlog_level_debug, __FUNCTION__, "trans_head not NULL ");
 			LIST_TRAVERSE_CONST(trans_head, curr)
 			{
 				if (!(entry = (t_trans*)elem_get_data(curr))) {
